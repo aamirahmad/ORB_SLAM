@@ -24,6 +24,8 @@ ${PROJECT_SOURCE_DIR}
 ${EIGEN3_INCLUDE_DIR}
 )
 
+
+
 rosbuild_add_executable(${PROJECT_NAME}
 src/main.cc
 src/Tracking.cc
@@ -32,6 +34,7 @@ src/LoopClosing.cc
 src/ORBextractor.cc
 src/ORBmatcher.cc
 src/FramePublisher.cc
+src/FeaturePublisher.cc
 src/Converter.cc
 src/MapPoint.cc
 src/KeyFrame.cc
@@ -44,12 +47,16 @@ src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
 )
-rosbuild_add_boost_directories()
-rosbuild_link_boost(${PROJECT_NAME} thread)
+find_package(Boost COMPONENTS filesystem REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
+# rosbuild_add_boost_directories()
+# rosbuild_link_boost(${PROJECT_NAME} thread)
 
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
+${Boost_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 )

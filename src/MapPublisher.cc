@@ -26,13 +26,22 @@ namespace ORB_SLAM
 {
 
 
-MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
+MapPublisher::MapPublisher(Map* pMap, int ID):mpMap(pMap), robotID(ID), mbCameraUpdated(false)
 {
-    const char* MAP_FRAME_ID = "/ORB_SLAM/World";
-    const char* POINTS_NAMESPACE = "MapPoints";
-    const char* KEYFRAMES_NAMESPACE = "KeyFrames";
-    const char* GRAPH_NAMESPACE = "Graph";
-    const char* CAMERA_NAMESPACE = "Camera";
+    string robotIDstring = "/ORB_SLAM/World_"+boost::lexical_cast<string>(robotID);
+    const char* MAP_FRAME_ID = robotIDstring.c_str();
+    
+    string pointsNamespace = "MapPoints"+boost::lexical_cast<string>(robotID);
+    const char* POINTS_NAMESPACE = pointsNamespace.c_str();
+    
+    string keyframesNamespace = "KeyFrames"+boost::lexical_cast<string>(robotID);
+    const char* KEYFRAMES_NAMESPACE = keyframesNamespace.c_str();
+    
+    string graphNamespace = "Graph"+boost::lexical_cast<string>(robotID);
+    const char* GRAPH_NAMESPACE = graphNamespace.c_str();
+    
+    string cameraNamespace = "Camera"+boost::lexical_cast<string>(robotID);
+    const char* CAMERA_NAMESPACE = cameraNamespace.c_str();
 
     //Configure MapPoints
     fPointSize=0.01;
@@ -107,7 +116,7 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     mReferencePoints.color.a = 1.0;
 
     //Configure Publisher
-    publisher = nh.advertise<visualization_msgs::Marker>("ORB_SLAM/Map", 10);
+    publisher = nh.advertise<visualization_msgs::Marker>("ORB_SLAM/Map"+boost::lexical_cast<string>(robotID), 10);
 
     publisher.publish(mPoints);
     publisher.publish(mReferencePoints);

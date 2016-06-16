@@ -36,6 +36,7 @@
 #include"ORBextractor.h"
 #include "Initializer.h"
 #include "MapPublisher.h"
+#include "FeaturePublisher.h"
 
 #include<tf/transform_broadcaster.h>
 
@@ -52,7 +53,7 @@ class Tracking
 {  
 
 public:
-    Tracking(ORBVocabulary* pVoc, FramePublisher* pFramePublisher, MapPublisher* pMapPublisher, Map* pMap, string strSettingPath);
+    Tracking(ORBVocabulary* pVoc, FramePublisher* pFramePublisher, MapPublisher* pMapPublisher, FeaturePublisher* pFeaturePublisher, Map* pMap, string strSettingPath, int ID);
 
     enum eTrackingState{
         SYSTEM_NOT_READY=-1,
@@ -90,6 +91,7 @@ public:
 
 
 protected:
+    
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
     void FirstInitialization();
@@ -138,6 +140,7 @@ protected:
     //Publishers
     FramePublisher* mpFramePublisher;
     MapPublisher* mpMapPublisher;
+    FeaturePublisher* mpFeaturePublisher;
 
     //Map
     Map* mpMap;
@@ -180,6 +183,9 @@ protected:
 
     // Transfor broadcaster (for visualization in rviz)
     tf::TransformBroadcaster mTfBr;
+    
+    // robot ID Variable
+    int robotID;    
 };
 
 } //namespace ORB_SLAM

@@ -28,6 +28,7 @@
 
 #include "Tracking.h"
 #include "FramePublisher.h"
+#include "FeaturePublisher.h"
 #include "Map.h"
 #include "MapPublisher.h"
 #include "LocalMapping.h"
@@ -44,20 +45,25 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "ORB_SLAM");
-    ros::start();
 
     cout << endl << "ORB-SLAM Copyright (C) 2014 Raul Mur-Artal" << endl <<
             "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
             "This is free software, and you are welcome to redistribute it" << endl <<
             "under certain conditions. See LICENSE.txt." << endl;
 
-    if(argc != 3)
+    if(argc != 4)
     {
-        cerr << endl << "Usage: rosrun ORB_SLAM ORB_SLAM path_to_vocabulary path_to_settings (absolute or relative to package directory)" << endl;
+        cerr << endl << "Usage: rosrun ORB_SLAM ORB_SLAM path_to_vocabulary path_to_settings (absolute or relative to package directory) robotID" << endl;
         ros::shutdown();
         return 1;
     }
+    
+    
+    // Load the robotID
+    int robotID = atoi(argv[3]);
+    
+    ros::init(argc, argv, "ORB_SLAM_ROBOT_"+boost::lexical_cast<string>(robotID));
+    ros::start();
 
     // Load Settings and Check
     string strSettingsFile = ros::package::getPath("ORB_SLAM")+"/"+argv[2];
@@ -71,7 +77,10 @@ int main(int argc, char **argv)
     }
 
     //Create Frame Publisher for image_view
-    ORB_SLAM::FramePublisher FramePub;
+    ORB_SLAM::FramePublisher FramePub(robotID);
+    
+    //Create a Feature Publisher
+    ORB_SLAM::FeaturePublisher FeaturePub(robotID);
 
     //Load ORB Vocabulary
    /* Old version to load vocabulary using cv::FileStorage
@@ -116,10 +125,10 @@ int main(int argc, char **argv)
     FramePub.SetMap(&World);
 
     //Create Map Publisher for Rviz
-    ORB_SLAM::MapPublisher MapPub(&World);
+    ORB_SLAM::MapPublisher MapPub(&World, robotID);
 
     //Initialize the Tracking Thread and launch
-    ORB_SLAM::Tracking Tracker(&Vocabulary, &FramePub, &MapPub, &World, strSettingsFile);
+    ORB_SLAM::Tracking Tracker(&Vocabulary, &FramePub, &MapPub, &FeaturePub, &World, strSettingsFile, robotID);
     boost::thread trackingThread(&ORB_SLAM::Tracking::Run,&Tracker);
 
     Tracker.SetKeyFrameDatabase(&Database);

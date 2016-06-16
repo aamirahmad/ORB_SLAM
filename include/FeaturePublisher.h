@@ -1,7 +1,7 @@
 /**
 * This file is part of ORB-SLAM.
 *
-* Copyright (C) 2014 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* Copyright (C) 2016 Aamir Ahmad <aamir.iitkgp@gmail.com> (max Planck Institute for biological Cybernetics). This code is built on top of Raúl Mur-Artal <raulmur at unizar dot es>'s original ORB-SLAM code
 * For more information see <http://webdiis.unizar.es/~raulmur/orbslam/>
 *
 * ORB-SLAM is free software: you can redistribute it and/or modify
@@ -18,55 +18,42 @@
 * along with ORB-SLAM. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MAPPUBLISHER_H
-#define MAPPUBLISHER_H
+#ifndef FEATUREPUBLISHER_H
+#define FEATUREPUBLISHER_H
 
 #include<ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
+#include "std_msgs/MultiArrayLayout.h"
+#include "std_msgs/MultiArrayDimension.h"
+
+#include "std_msgs/Int32MultiArray.h"
+
 #include"Map.h"
 #include"MapPoint.h"
 #include"KeyFrame.h"
+#include"Frame.h"
 
 namespace ORB_SLAM
 {
 
-class MapPublisher
+class FeaturePublisher
 {
 public:
-    MapPublisher(Map* pMap, int ID);
+    FeaturePublisher(int ID);
 
     Map* mpMap;
 
     void Refresh();
-    void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs);
-    void PublishKeyFrames(const std::vector<KeyFrame*> &vpKFs);
-    void PublishCurrentCamera(const cv::Mat &Tcw);
-    void SetCurrentCameraPose(const cv::Mat &Tcw);
+    void PublishFeatures(cv::Mat& descriptor);
+    void Publish3DPointsAssociated(const std::vector<MapPoint*> &assocMapPoints);
 
 private:
 
-    cv::Mat GetCurrentCameraPose();
-    bool isCamUpdated();
-    void ResetCamFlag();
-
     ros::NodeHandle nh;
-    ros::Publisher publisher;
-
-    visualization_msgs::Marker mPoints;
-    visualization_msgs::Marker mReferencePoints;
-    visualization_msgs::Marker mKeyFrames;
-    visualization_msgs::Marker mReferenceKeyFrames;
-    visualization_msgs::Marker mCovisibilityGraph;
-    visualization_msgs::Marker mMST;
-    visualization_msgs::Marker mCurrentCamera;
-
-    float fCameraSize;
-    float fPointSize;
-
-    cv::Mat mCameraPose;
-    bool mbCameraUpdated;
-
+    ros::Publisher publisher_orb, publisher_3dPoints;
+    
+    cv::Mat descriptorMatrix;
     boost::mutex mMutexCamera;
     // robot ID Variable
     int robotID;        
@@ -74,4 +61,4 @@ private:
 
 } //namespace ORB_SLAM
 
-#endif // MAPPUBLISHER_H
+#endif // FEATUREPUBLISHER_H

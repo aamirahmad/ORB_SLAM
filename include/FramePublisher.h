@@ -41,7 +41,7 @@ class Tracking;
 class FramePublisher
 {
 public:
-    FramePublisher();    
+    FramePublisher(int ID);    
 
     void Update(Tracking *pTracker);
 
@@ -75,6 +75,8 @@ protected:
     bool mbUpdated;
 
     Map* mpMap;
+    
+    int robotID;
 
     boost::mutex mMutex;
 };

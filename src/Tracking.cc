@@ -43,8 +43,8 @@ namespace ORB_SLAM
 {
 
 
-Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPublisher *pMapPublisher, Map *pMap, string strSettingPath):
-    mState(NO_IMAGES_YET), mpORBVocabulary(pVoc), mpFramePublisher(pFramePublisher), mpMapPublisher(pMapPublisher), mpMap(pMap),
+Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPublisher *pMapPublisher, FeaturePublisher* pFeaturePublisher, Map *pMap, string strSettingPath, int ID):
+    mState(NO_IMAGES_YET), mpORBVocabulary(pVoc), mpFramePublisher(pFramePublisher), mpMapPublisher(pMapPublisher), mpFeaturePublisher(pFeaturePublisher), mpMap(pMap), robotID(ID),
     mnLastRelocFrameId(0), mbPublisherStopped(false), mbReseting(false), mbForceRelocalisation(false), mbMotionModel(false)
 {
     // Load camera parameters from settings file
@@ -135,11 +135,10 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     }
     else
         cout << endl << "Motion Model: Disabled (not recommended, change settings UseMotionModel: 1)" << endl << endl;
-
-
+    
     tf::Transform tfT;
     tfT.setIdentity();
-    mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World", "/ORB_SLAM/Camera"));
+    mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World_"+boost::lexical_cast<string>(robotID), "/ORB_SLAM/Camera_"+boost::lexical_cast<string>(robotID)));
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -157,10 +156,10 @@ void Tracking::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
     mpKeyFrameDB = pKFDB;
 }
 
-void Tracking::Run()
+void Tracking::Run()      
 {
     ros::NodeHandle nodeHandler;
-    ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &Tracking::GrabImage, this);
+    ros::Subscriber sub = nodeHandler.subscribe("/firefly_"+boost::lexical_cast<string>(robotID)+"/xtion/rgb/image_raw", 1, &Tracking::GrabImage, this);
 
     ros::spin();
 }
@@ -200,6 +199,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
+    
 
     // Depending on the state of the Tracker we perform different tasks
 
@@ -264,7 +264,13 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         }
 
         if(bOK)
+	{
             mState = WORKING;
+	    // Publish the descriptor array and 3D points associated with it
+	    mpFeaturePublisher->PublishFeatures(mCurrentFrame.mDescriptors);	    
+	    mpFeaturePublisher->Publish3DPointsAssociated(mCurrentFrame.mvpMapPoints);
+	    
+	}
         else
             mState=LOST;
 
@@ -311,7 +317,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
         tf::Transform tfTcw(M,V);
 
-        mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+	mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "/ORB_SLAM/World_"+boost::lexical_cast<string>(robotID), "/ORB_SLAM/Camera_"+boost::lexical_cast<string>(robotID)));	
     }
 
 }

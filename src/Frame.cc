@@ -58,6 +58,8 @@ Frame::Frame(cv::Mat &im_, const double &timeStamp, ORBextractor* extractor, ORB
 {
     // Exctract ORB  
     (*mpORBextractor)(im,cv::Mat(),mvKeys,mDescriptors);
+    
+    
 
     N = mvKeys.size();
 
@@ -83,6 +85,8 @@ Frame::Frame(cv::Mat &im_, const double &timeStamp, ORBextractor* extractor, ORB
         cy = K.at<float>(1,2);
 
         mbInitialComputations=false;
+	
+	//cout << "mDescriptors = "<< endl << " "  << mDescriptors << endl << endl;
     }
 
 
